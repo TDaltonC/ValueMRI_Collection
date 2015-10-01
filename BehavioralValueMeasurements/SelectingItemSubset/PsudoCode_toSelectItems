@@ -1,0 +1,68 @@
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Design Contraints
+Select a subset of options from the complete rank with the following objectives:
+
+Maximize Range: The greater the range of options values, the stronger the value and value-differnece signal-to-noise ratios. 
+
+Uniform Distribution: A uniform distribution of values is optimal for solving for beta values of the value and value-difference regressors. 
+
+Symmetric distribution around the fixed option: This keeps the value of value-difference regressors orthogonal. 
+
+The three distributions should be identical to each other: Keeping the distributions symmetrical controls for non-linear effects of value of brain activity (the value regressor should account for the linear effects of value).
+
+Have fmri data for the elements of each bundle. for example, if [pretzle and popcorn] is going in to the MRI, so should [pretzle] and [popcorn] we need this data to be able to run all of machine learning stuff. If we want to look for the encoding of [pretzle and popcorn] we need to know the encoding of [pretzle] and [popcorn].
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Algorithm1 Psudo-Code—
+
+Measure the range of value for each type of option (single, homog, hetero)
+
+Take the max of the three values of the lower end of the ranges
+
+Take the min of the three values of the upper end of the ranges
+
+That’s the range available
+
+(maybe widen the range by one or two ranks)
+
+Find the single-item option nearest the center of the range -- this will be the control item
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Algorithm2 Psudo-Code—
+This algorythem works by selecting "tripplets" of goods. Each containing one single, one scaled, and one bundled. The trick is to find the 10 best tripplets.
+
+Measure the range of value for each type of option (single, homog, hetero)
+
+Consider only the bundled options (or the scaled options). 
+
+Pick the singlton option nearest the mid point of the range of the Hetero goods. That's the contol option.
+
+Have each bundles option pick its nearest singleton-option and the nearest scaled-option.
+We now have 14 prospective tripplets. Which ones should we use?
+
+A trippet is 'tight' if all of it's options are close to one another. 
+Pick triplets in order from the tightest to the loosest. 
+
+Repeat this process of selecting tripplets but try all combinations of eliminating the most and least valuable bundled options.
+eg
+---------------X
+--------------XX
+-------------XXX
+------------XXXX
+X---------------
+X--------------X
+X-------------XX
+X------------XXX
+XX-------------X
+XX------------XX
+XXX------------X
+XXXX------------
+
+See which has the best fit on the tests (symitry, short distance, range, ect). 
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Some number to think about:
+If we have them rank 22 singles, 14 Scalers, and 14 bundles 
+And we need to pick 10 of each thats
+646,646 posible combination of singles, 1,001 posible combination of scalers, 1,001 posible combination of Bundles or  647,939,938,646 all together (maybe too much?).

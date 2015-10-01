@@ -1,0 +1,71 @@
+optseq2
+$Id: optseq2.c,v 2.21.2.1 2011/04/21 19:50:06 greve Exp $
+NoSearch  = 0
+nSearch  = 10000
+nKeep    = 5
+PctUpdate  = 10.000000
+nCB1Opt  = 0
+seed     = 813852
+Ntp  = 162
+TR   = 2
+TPreScan   = 0
+PSD Window   = 0 20 0.5
+nEvTypes = 3
+EvNo    Label Duration nRepsNom
+ 1     single  4.500   18
+ 2       homo  4.500   18
+ 3     hetero  4.500   18
+PctVarEvReps = 0
+VarEvRepsPerCond = 0
+PolyOrder = -1
+tNullMax = -1
+tNullMin = 0
+AR1 = 0
+No refractory penalty
+Cost = eff
+OutStem = ex1
+Summary File = ex1.sum
+
+
+
+
+Searched 10000 iterations for 0.042778 hours
+Rate: 64.9351 iterations per second
+INFO: 479/10000 schedules were ill-conditioned 
+Number of iterations since last substitution 3371
+Cost Avg/Std: 0.0076399 0.0036381
+Max Eff Encountered:    0.0116667
+Max VRFAvg Encountered: 1.50603
+Eff of Nominal Ideal XtX: 0.141089
+
+Rank     Cost   ZCost NthIter  Eff   CB1Err   VRFAvg VRFStd VRFMin VRFMax VRFRng IXtXErr  
+  1    0.0117   1.107  6340   0.012 0.092593   1.51   0.40   0.80   2.59   1.79   5109.00
+  2    0.0116   1.093  3038   0.012 0.166667   1.46   0.34   0.73   2.87   2.13   5040.00
+  3    0.0113   0.995   862   0.011 0.166667   1.43   0.35   0.75   2.29   1.54   5023.00
+  4    0.0112   0.977  6456   0.011 0.314815   1.49   0.45   0.48   2.82   2.34   4976.00
+  5    0.0112   0.970  1437   0.011 0.240741   1.45   0.41   0.61   2.75   2.14   5005.00
+
+Ideal CB1 PMtx--------------------------
+ 0.333   0.333   0.333;
+ 0.333   0.333   0.333;
+ 0.333   0.333   0.333;
+Schedule 1 CB1 PMtx--------------------------
+ 0.389   0.333   0.278;
+ 0.222   0.333   0.389;
+ 0.333   0.333   0.333;
+Schedule 2 CB1 PMtx--------------------------
+ 0.222   0.444   0.278;
+ 0.333   0.278   0.389;
+ 0.389   0.278   0.333;
+Schedule 3 CB1 PMtx--------------------------
+ 0.278   0.278   0.444;
+ 0.333   0.278   0.333;
+ 0.389   0.389   0.222;
+Schedule 4 CB1 PMtx--------------------------
+ 0.278   0.278   0.444;
+ 0.444   0.167   0.389;
+ 0.278   0.500   0.167;
+Schedule 5 CB1 PMtx--------------------------
+ 0.278   0.222   0.500;
+ 0.389   0.278   0.278;
+ 0.333   0.444   0.222;
