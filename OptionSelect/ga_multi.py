@@ -20,7 +20,7 @@ os.chdir('/Users/Dalton/Documents/Projects/BundledOptionsExp/Collection/OptionSe
 
 # Define the location of the csv file with modeled preferences, should make relative
 # Three col CSV (Item-Code, Option-Type, Value)
-csv_filepath='rank3306.csv'
+csv_filepath='rank9999.csv'
 
 
 #%% Magic Numbers
