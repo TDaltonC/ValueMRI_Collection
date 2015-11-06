@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Aug 13 13:01:21 2015
-
 @author: Calvin
 """
 
@@ -16,11 +15,11 @@ import multiprocessing as mp
 import json
 import os
 
-os.chdir('/Users/Dalton/Documents/Projects/BundledOptionsExp/Collection/OptionSelect')
+os.chdir('/Users/Calvin/Desktop/')
 
 # Define the location of the csv file with modeled preferences, should make relative
 # Three col CSV (Item-Code, Option-Type, Value)
-csv_filepath='rank3306.csv'
+csv_filepath='rank9999.csv'
 
 
 #%% Magic Numbers
@@ -28,7 +27,7 @@ csv_filepath='rank3306.csv'
 #cxpb- probability of a cross over occuring in one chromosome of a mating pair
 #mutpb- probability of at each nucleotide of a mutation
 #number of individuals to put in HOF in each epoc
-nepochs, ngen, npop, cxpb, mutpb =2,80,2000, 0.1, 0.05
+nepochs, ngen, npop, cxpb, mutpb =2,200,2000, 0.1, 0.05
     
 HOFsize=1
 
@@ -61,14 +60,17 @@ def evalFit(individual):
     #####similarityCost=np.sum(np.in1d(individual[0][0],[ bundleLookup[k] for k in individual[0][1] ]))
     similarityCost=np.sum(np.in1d([singletonLookup[k] for k in individual[0][0]],[ bundleLookup[k] for k in individual[0][1] ]))
     similarity2=np.sum([np.sum(c)>1 for c in [np.in1d(p,[singletonLookup[k] for k in individual[0][0]]) for p in [ bundleLookup2[w] for w in individual[0][2] ]]])
-    #similarityCost=   np.sum([np.sum(c)>1 for c in [np.in1d(k,x) for k in y]])
     #x is singelton, y is array of tuples of constituent items
     ######similarity2=np.sum([np.sum(c)>1 for c in [np.in1d(p,individual[0][0]) for p in [ bundleLookup2[w] for w in individual[0][2] ]]])
-    rangeCost=(np.ptp(indiv[0])+np.ptp(indiv[1])+np.ptp(indiv[2]))/125
-    uniformCost=1/(kstest(indiv[0],'uniform')[0]+kstest(indiv[1],'uniform')[0]+kstest(indiv[2],'uniform')[0])
+    rangeCost=20*(np.ptp(indiv[0])+np.ptp(indiv[1])+np.ptp(indiv[2]))/50
+    #uniformCost=-(kstest(indiv[0],'uniform')[0]+kstest(indiv[1],'uniform')[0]+kstest(indiv[2],'uniform')[0])
     #uniformCost=(ks_2samp(indiv[0], uni)[1]+ks_2samp(indiv[1], uni)[1]+ks_2samp(indiv[2], uni)[1])    
-    distanceCost=(ks_2samp(indiv[0], indiv[1])[1]+ks_2samp(indiv[1], indiv[2])[1]+ks_2samp(indiv[2], indiv[0])[1])
-    cost=20*rangeCost+30*uniformCost+10*distanceCost+similarityCost+similarity2   
+    #distanceCost=10*(ks_2samp(indiv[0], indiv[1])[1]+ks_2samp(indiv[1], indiv[2])[1]+ks_2samp(indiv[2], indiv[0])[1])
+    distanceCost = 0
+    #uniformityCost = -np.power(np.diff(np.hstack((0,indiv[0],60))),3).sum()-np.power(np.diff(np.hstack((0,indiv[1],60))),3).sum()-np.power(np.diff(np.hstack((0,indiv[2],60))),3).sum()
+    spacingCost = 4*(np.mean(np.diff(indiv[0]))+np.mean(np.diff(indiv[1]))+np.mean(np.diff(indiv[2])))
+    varCost = -(np.var(np.diff(indiv[0]))+np.var(np.diff(indiv[1]))+np.var(np.diff(indiv[2])))
+    cost=rangeCost+distanceCost+spacingCost+varCost+rangeCost+similarityCost+similarity2#+similarityCost+similarity2#80*uniformCost+10*distanceCost+similarityCost+similarity2   
     return (cost,)
 
 def getSims(individual):
@@ -275,21 +277,10 @@ if __name__ == '__main__':
     with open('jsonOut.txt', 'w') as outfile:
         outfile.write(str(outputData))
 
-    extended = np.unique(np.hstack((np.ravel([bundleLookup[x] for x in bestIndividual[1]]), np.ravel([bundleLookup2[x] for x in bestIndividual[2]]), bestIndividual[0])))
-    outputDataFull = np.hstack((extended, bestIndividual[1],bestIndividual[2], medianUntransed))
-    outputDataFull = np.unique(outputDataFull)
-    outputDataFull = np.sort(outputDataFull)
-    transedFullData = []
-    for x in outputDataFull:
-        if x in singletonLookup.keys():
-            transedFullData.append(singletonLookup[x])
-        elif x in bundleLookup.keys():
-            transedFullData.append((bundleLookup[x],bundleLookup[x]))
-        elif x in bundleLookup2.keys():
-            transedFullData.append(bundleLookup2[x])
-        else:
-            raise ValueError('Custom error: item in outputData JSON was not in any value dictionary')
-    outputData = { 'options' : transedFullData}
+    extended = np.unique(np.hstack((np.ravel([bundleLookup[x] for x in bestIndividual[1]]), np.ravel([bundleLookup2[x] for x in bestIndividual[2]]), [singletonLookup[x] for x in bestIndividual[0]]))).tolist()
+    homoTransed = [(x,x) for x in homoTransed]
+    ouputDataFull  = extended+homoTransed+heteroTransed #median is in bestIndividual, so is included
+    outputData = { 'options' : ouputDataFull }
     outputData = json.dumps(outputData)
     with open('jsonOutExtended.txt', 'w') as outfile:
         outfile.write(str(outputData))
