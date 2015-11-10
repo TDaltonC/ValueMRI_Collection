@@ -145,17 +145,15 @@ def custHallOfFame(population,maxaddsize):
 def inputErrorCheck(raw_data):
     if not raw_data[['item1', 'item2']].applymap(np.isreal).all().all():
         raise ValueError('Custom error, ask CL : Some item value is not a number')
-    if [raw_data['index']>60].any:
+    if (raw_data.index>=60).any():
         raise ValueError("Custom error, ask CL : An item index is > 60")
-    for bundleType in range(1,4):
-        if raw_data[raw_data['type']==bundleType].duplicated(subset=['item1', 'item2']).any():
-            print raw_data[raw_data['type']==bundleType].duplicated(subset=['item1', 'item2'])
-            raise ValueError('Custom error, ask CL : Some item value is duplicated')
-    
-    
+    if raw_data.duplicated(subset=['item1', 'item2']).any():
+        print raw_data[raw_data.duplicated(subset=['item1', 'item2'])]
+        raise ValueError('Custom error, ask CL : Some item value is duplicated')
 
 #%%==============import data from csv======================%%#
 raw_choice_dataset = pd.read_csv(csv_filepath, sep=',', header=0)
+inputErrorCheck(raw_choice_dataset)
 
 valueDictionary={}
 for x in range(1,4):
@@ -266,9 +264,9 @@ if __name__ == '__main__':
     bestIndividual = results[maxIndex]
     
     singletonTransed = [singletonLookup[item] for item in bestIndividual[0]]
-    median = singletonTransed[5]
-    medianUntransed = bestIndividual[0][5]
-    singletonTransed = np.delete(singletonTransed, 5).tolist()
+    median = singletonTransed[4]
+    medianUntransed = bestIndividual[0][4]
+    singletonTransed = np.delete(singletonTransed, 4).tolist()
     homoTransed = [bundleLookup[item] for item in bestIndividual[1]]
     heteroTransed = [bundleLookup2[item] for item in bestIndividual[2]]
     
