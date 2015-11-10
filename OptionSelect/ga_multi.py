@@ -66,11 +66,10 @@ def evalFit(individual):
     #uniformCost=-(kstest(indiv[0],'uniform')[0]+kstest(indiv[1],'uniform')[0]+kstest(indiv[2],'uniform')[0])
     #uniformCost=(ks_2samp(indiv[0], uni)[1]+ks_2samp(indiv[1], uni)[1]+ks_2samp(indiv[2], uni)[1])    
     #distanceCost=10*(ks_2samp(indiv[0], indiv[1])[1]+ks_2samp(indiv[1], indiv[2])[1]+ks_2samp(indiv[2], indiv[0])[1])
-    distanceCost = 0
     #uniformityCost = -np.power(np.diff(np.hstack((0,indiv[0],60))),3).sum()-np.power(np.diff(np.hstack((0,indiv[1],60))),3).sum()-np.power(np.diff(np.hstack((0,indiv[2],60))),3).sum()
     spacingCost = 4*(np.mean(np.diff(indiv[0]))+np.mean(np.diff(indiv[1]))+np.mean(np.diff(indiv[2])))
     varCost = -(np.var(np.diff(indiv[0]))+np.var(np.diff(indiv[1]))+np.var(np.diff(indiv[2])))
-    cost=rangeCost+distanceCost+spacingCost+varCost+rangeCost+similarityCost+similarity2#+similarityCost+similarity2#80*uniformCost+10*distanceCost+similarityCost+similarity2   
+    cost=rangeCost+spacingCost+varCost+rangeCost+similarityCost+similarity2#+similarityCost+similarity2#80*uniformCost+10*distanceCost+similarityCost+similarity2   
     return (cost,)
 
 def getSims(individual):
