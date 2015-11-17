@@ -28,7 +28,7 @@ csv_filepath=r'csvs\rank3301.csv'
 #cxpb- probability of a cross over occuring in one chromosome of a mating pair
 #mutpb- probability of at each nucleotide of a mutation
 #number of individuals to put in HOF in each epoc
-nepochs, ngen, npop, cxpb, mutpb =1,100,2000, 0.1, 0.05
+nepochs, ngen, npop, cxpb, mutpb =2,100,2000, 0.1, 0.05
     
 HOFsize=1
 
@@ -47,7 +47,7 @@ chromosomeDict={0:n_single, 1:n_hetero, 2:n_homo}
 #np.random.seed(1)
 
 #%%===========define fitness and functions=================%%#
-uni=np.random.uniform(0,60,500)
+#uni=np.random.uniform(0,60,500)
 
 def evalFit(individual): 
     """ A weighted total of fitness scores to be maximized
