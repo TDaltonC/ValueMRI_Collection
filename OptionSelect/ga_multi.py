@@ -1,26 +1,27 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Aug 13 13:01:21 2015
-
 @author: Calvin
 """
 
 #%%==========imports and constants=================%%#
 import numpy as np
-import pandas as pd
+import pandas as pd  
 from deap import base, creator, tools
-import matplotlib.pyplot as plt
 from scipy.stats import kstest, ks_2samp
-import random, operator, seaborn
+import random, operator
 import multiprocessing as mp
 import json
 import os
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-os.chdir('/Users/Dalton/Documents/Projects/BundledOptionsExp/Collection/OptionSelect')
+#os.chdir('/Users/Calvin/Desktop/')
 
 # Define the location of the csv file with modeled preferences, should make relative
 # Three col CSV (Item-Code, Option-Type, Value)
-csv_filepath='rank3306.csv'
+inputSID = 3301
+csv_filepath=r'rank' + str(inputSID)+ '.csv'
 
 
 #%% Magic Numbers
@@ -28,13 +29,12 @@ csv_filepath='rank3306.csv'
 #cxpb- probability of a cross over occuring in one chromosome of a mating pair
 #mutpb- probability of at each nucleotide of a mutation
 #number of individuals to put in HOF in each epoc
-nepochs, ngen, npop, cxpb, mutpb =2,80,2000, 0.1, 0.05
+nepochs, ngen, npop, cxpb, mutpb =2,125,2500, 0.1, 0.05
     
 HOFsize=1
 
 HallOfFame=[]
 
-SID='a03'
 n_single=20 #1 number of possibilities for singleton
 n_hetero=15 #2 number of possibilities for the heterogenous bundle
 n_homo=22 #3 number of possibilities for the homogeneous scaling
@@ -44,11 +44,11 @@ n_target=10 #Desired number in each chromosome
 chromosomeDict={0:n_single, 1:n_hetero, 2:n_homo}
 
 #Define the seed for the random number generator for replication purposes
-random.seed(1)
-np.random.seed(1)
+#random.seed(1)
+#np.random.seed(1)
 
 #%%===========define fitness and functions=================%%#
-uni=np.random.uniform(0,60,500)
+#uni=np.random.uniform(0,60,500)
 
 def evalFit(individual): 
     """ A weighted total of fitness scores to be maximized
@@ -58,17 +58,14 @@ def evalFit(individual):
     DistanceCost- Uses KS divergence to indicate differences between distributions
     Cost currently is a simple weightable summation, might be changed to F score"""
     indiv=genoToPheno(individual)
-    #####similarityCost=np.sum(np.in1d(individual[0][0],[ bundleLookup[k] for k in individual[0][1] ]))
-    similarityCost=np.sum(np.in1d([singletonLookup[k] for k in individual[0][0]],[ bundleLookup[k] for k in individual[0][1] ]))
-    similarity2=np.sum([np.sum(c)>1 for c in [np.in1d(p,[singletonLookup[k] for k in individual[0][0]]) for p in [ bundleLookup2[w] for w in individual[0][2] ]]])
-    #similarityCost=   np.sum([np.sum(c)>1 for c in [np.in1d(k,x) for k in y]])
-    #x is singelton, y is array of tuples of constituent items
-    ######similarity2=np.sum([np.sum(c)>1 for c in [np.in1d(p,individual[0][0]) for p in [ bundleLookup2[w] for w in individual[0][2] ]]])
-    rangeCost=(np.ptp(indiv[0])+np.ptp(indiv[1])+np.ptp(indiv[2]))/125
-    uniformCost=1/(kstest(indiv[0],'uniform')[0]+kstest(indiv[1],'uniform')[0]+kstest(indiv[2],'uniform')[0])
-    #uniformCost=(ks_2samp(indiv[0], uni)[1]+ks_2samp(indiv[1], uni)[1]+ks_2samp(indiv[2], uni)[1])    
-    distanceCost=(ks_2samp(indiv[0], indiv[1])[1]+ks_2samp(indiv[1], indiv[2])[1]+ks_2samp(indiv[2], indiv[0])[1])
-    cost=20*rangeCost+30*uniformCost+10*distanceCost+similarityCost+similarity2   
+    #similarityCost=np.sum(np.in1d([singletonLookup[k] for k in individual[0][0]],[ bundleLookup[k] for k in individual[0][1] ]))
+    #similarity2=np.sum([np.sum(c)>1 for c in [np.in1d(p,[singletonLookup[k] for k in individual[0][0]]) for p in [ bundleLookup2[w] for w in individual[0][2] ]]])
+    rangeCost=20*(np.ptp(indiv[0])+np.ptp(indiv[1])+np.ptp(indiv[2]))/50   
+    #distanceCost=10*(ks_2samp(indiv[0], indiv[1])[1]+ks_2samp(indiv[1], indiv[2])[1]+ks_2samp(indiv[2], indiv[0])[1])
+    #uniformityCost = -np.power(np.diff(np.hstack((0,indiv[0],60))),2).sum()-np.power(np.diff(np.hstack((0,indiv[1],60))),2).sum()-np.power(np.diff(np.hstack((0,indiv[2],60))),2).sum()
+    spacingCost = 5*(np.mean(np.diff(np.hstack((0,indiv[0],60))))+np.mean(np.diff(np.hstack((0,indiv[1],60))))+np.mean(np.diff(np.hstack((0,indiv[2],60)))))
+    varCost = -3*(np.var(np.diff(np.hstack((0,indiv[0],60))))+np.var(np.diff(np.hstack((0,indiv[1],60))))+np.var(np.diff(np.hstack((0,indiv[2],60)))))
+    cost=rangeCost+spacingCost+varCost+rangeCost
     return (cost,)
 
 def getSims(individual):
@@ -143,17 +140,24 @@ def custHallOfFame(population,maxaddsize):
 def inputErrorCheck(raw_data):
     if not raw_data[['item1', 'item2']].applymap(np.isreal).all().all():
         raise ValueError('Custom error, ask CL : Some item value is not a number')
-    if [raw_data['index']>60].any:
+    if (raw_data.index>=60).any():
         raise ValueError("Custom error, ask CL : An item index is > 60")
-    for bundleType in range(1,4):
-        if raw_data[raw_data['type']==bundleType].duplicated(subset=['item1', 'item2']).any():
-            print raw_data[raw_data['type']==bundleType].duplicated(subset=['item1', 'item2'])
-            raise ValueError('Custom error, ask CL : Some item value is duplicated')
-    
-    
+    if raw_data.duplicated(subset=['item1', 'item2']).any():
+        print raw_data[raw_data.duplicated(subset=['item1', 'item2'])]
+        raise ValueError('Custom error, ask CL : Some item value is duplicated')
+    if raw_data[['item1', 'item2']].applymap(lambda x: x>30).any().any():
+        raise ValueError('Item number is greater than 30')
+        
+def getRank(item):
+    if type(item)==tuple:
+        return raw_choice_dataset.loc[(raw_choice_dataset['item1']==item[0]) & (raw_choice_dataset['item2']==item[1]),'rank'].values[0] 
+    else:
+        raise ValueError('Custom error: Some item is not a tuple in rank ordering')
 
 #%%==============import data from csv======================%%#
 raw_choice_dataset = pd.read_csv(csv_filepath, sep=',', header=0)
+
+inputErrorCheck(raw_choice_dataset)
 
 valueDictionary={}
 for x in range(1,4):
@@ -242,7 +246,7 @@ def main_program(pop):
 if __name__ == '__main__':  
     print 'GA algorithm starting with the following settings:'
     print 'nepochs = ' + str(nepochs) + ' ngen = ' + str(ngen) + ' npop = ' + str(npop)
-    print 'cxpb = ' + str(cxpb) + ' mutpb = ' + str(mutpb)
+    print 'cxpb = ' + str(cxpb) + ' mutpb = ' + str(mutpb) + ' SID = ' + str(inputSID)
     answer = input('Are the following settings okay? (0/1)  ')
     if answer == 0:
         raise ValueError('Custom Error: Please change settings in script file')    
@@ -275,22 +279,24 @@ if __name__ == '__main__':
     with open('jsonOut.txt', 'w') as outfile:
         outfile.write(str(outputData))
 
-    extended = np.unique(np.hstack((np.ravel([bundleLookup[x] for x in bestIndividual[1]]), np.ravel([bundleLookup2[x] for x in bestIndividual[2]]), bestIndividual[0])))
-    outputDataFull = np.hstack((extended, bestIndividual[1],bestIndividual[2], medianUntransed))
-    outputDataFull = np.unique(outputDataFull)
-    outputDataFull = np.sort(outputDataFull)
-    transedFullData = []
-    for x in outputDataFull:
-        if x in singletonLookup.keys():
-            transedFullData.append(singletonLookup[x])
-        elif x in bundleLookup.keys():
-            transedFullData.append((bundleLookup[x],bundleLookup[x]))
-        elif x in bundleLookup2.keys():
-            transedFullData.append(bundleLookup2[x])
-        else:
-            raise ValueError('Custom error: item in outputData JSON was not in any value dictionary')
-    outputData = { 'options' : transedFullData}
+    extended = np.unique(np.hstack((np.ravel([bundleLookup[x] for x in bestIndividual[1]]), np.ravel([bundleLookup2[x] for x in bestIndividual[2]]), [singletonLookup[x] for x in bestIndividual[0]]))).tolist()
+    homoTransed = [(x,x) for x in homoTransed]
+    extended= [(x,0) for x in extended]
+    outputDataFull  = extended+homoTransed+heteroTransed #median is in bestIndividual, so is included
+    outputDataFull=sorted(outputDataFull, key = getRank)
+    outputDataFull = [item[0] if item[1]==0 else item for item in outputDataFull]
+    outputData = { 'options' : outputDataFull }
     outputData = json.dumps(outputData)
     with open('jsonOutExtended.txt', 'w') as outfile:
         outfile.write(str(outputData))
-        
+    #outputDataFull=sorted(outputDataFull, key = getRank)
+    #outputDataFull=sorted(outputDataFull) 
+    plt.hold(True)
+    plt.title(csv_filepath)
+    sns.set_context(rc={"figure.figsize": (8, 4)})
+    plt.bar(np.asarray(bestIndividual[0]),np.ones((1,len(bestIndividual[0])))[0], color = 'blue')
+    plt.bar(np.asarray(bestIndividual[1]),np.ones((1,len(bestIndividual[1])))[0], color = 'red')
+    plt.bar(np.asarray(bestIndividual[2]),np.ones((1,len(bestIndividual[2])))[0], color = 'green')
+    individual=[bestIndividual]
+    similarityCost=np.sum(np.in1d([singletonLookup[k] for k in individual[0][0]],[ bundleLookup[k] for k in individual[0][1] ]))
+    similarity2=np.sum([np.sum(c)>1 for c in [np.in1d(p,[singletonLookup[k] for k in individual[0][0]]) for p in [ bundleLookup2[w] for w in individual[0][2] ]]])
