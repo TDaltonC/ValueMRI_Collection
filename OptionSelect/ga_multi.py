@@ -284,7 +284,7 @@ if __name__ == '__main__':
     extended= [(x,0) for x in extended]
     outputDataFull  = extended+homoTransed+heteroTransed #median is in bestIndividual, so is included
     outputDataFull=sorted(outputDataFull, key = getRank)
-    outputDataFull = [x[1] for x in outputDataFull if x[1]==0 else x]
+    outputDataFull = [item[0] if item[1]==0 else item for item in outputDataFull]
     outputData = { 'options' : outputDataFull }
     outputData = json.dumps(outputData)
     with open('jsonOutExtended.txt', 'w') as outfile:
