@@ -20,8 +20,8 @@ import seaborn as sns
 
 # Define the location of the csv file with modeled preferences, should make relative
 # Three col CSV (Item-Code, Option-Type, Value)
-inputSID = input('Please enter an SID')
-csv_filepath=r'rank' + inputSID+ '.csv'
+inputSID = 3301
+csv_filepath=r'rank' + str(inputSID)+ '.csv'
 
 
 #%% Magic Numbers
@@ -29,7 +29,7 @@ csv_filepath=r'rank' + inputSID+ '.csv'
 #cxpb- probability of a cross over occuring in one chromosome of a mating pair
 #mutpb- probability of at each nucleotide of a mutation
 #number of individuals to put in HOF in each epoc
-nepochs, ngen, npop, cxpb, mutpb =2,100,2000, 0.1, 0.05
+nepochs, ngen, npop, cxpb, mutpb =2,125,2500, 0.1, 0.05
     
 HOFsize=1
 
@@ -65,7 +65,7 @@ def evalFit(individual):
     #uniformityCost = -np.power(np.diff(np.hstack((0,indiv[0],60))),2).sum()-np.power(np.diff(np.hstack((0,indiv[1],60))),2).sum()-np.power(np.diff(np.hstack((0,indiv[2],60))),2).sum()
     spacingCost = 5*(np.mean(np.diff(np.hstack((0,indiv[0],60))))+np.mean(np.diff(np.hstack((0,indiv[1],60))))+np.mean(np.diff(np.hstack((0,indiv[2],60)))))
     varCost = -3*(np.var(np.diff(np.hstack((0,indiv[0],60))))+np.var(np.diff(np.hstack((0,indiv[1],60))))+np.var(np.diff(np.hstack((0,indiv[2],60)))))
-    cost=rangeCost+spacingCost+varCost+rangeCost#+similarityCost+similarity2#80*uniformCost+10*distanceCost+similarityCost+similarity2   
+    cost=rangeCost+spacingCost+varCost+rangeCost
     return (cost,)
 
 def getSims(individual):
@@ -246,7 +246,7 @@ def main_program(pop):
 if __name__ == '__main__':  
     print 'GA algorithm starting with the following settings:'
     print 'nepochs = ' + str(nepochs) + ' ngen = ' + str(ngen) + ' npop = ' + str(npop)
-    print 'cxpb = ' + str(cxpb) + ' mutpb = ' + str(mutpb)
+    print 'cxpb = ' + str(cxpb) + ' mutpb = ' + str(mutpb) + ' SID = ' + str(inputSID)
     answer = input('Are the following settings okay? (0/1)  ')
     if answer == 0:
         raise ValueError('Custom Error: Please change settings in script file')    
