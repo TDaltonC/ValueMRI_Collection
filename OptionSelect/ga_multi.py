@@ -16,11 +16,12 @@ import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-os.chdir('/Users/Calvin/Desktop/')
+#os.chdir('/Users/Calvin/Desktop/')
 
 # Define the location of the csv file with modeled preferences, should make relative
 # Three col CSV (Item-Code, Option-Type, Value)
-csv_filepath=r'csvs\rank3301.csv'
+inputSID = input('Please enter an SID')
+csv_filepath=r'rank' + inputSID+ '.csv'
 
 
 #%% Magic Numbers
@@ -283,6 +284,7 @@ if __name__ == '__main__':
     extended= [(x,0) for x in extended]
     outputDataFull  = extended+homoTransed+heteroTransed #median is in bestIndividual, so is included
     outputDataFull=sorted(outputDataFull, key = getRank)
+    outputDataFull = [x[1] for x in outputDataFull if x[1]==0 else x]
     outputData = { 'options' : outputDataFull }
     outputData = json.dumps(outputData)
     with open('jsonOutExtended.txt', 'w') as outfile:
