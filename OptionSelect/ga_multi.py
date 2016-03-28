@@ -20,8 +20,8 @@ import seaborn as sns
 
 # Define the location of the csv file with modeled preferences, should make relative
 # Three col CSV (Item-Code, Option-Type, Value)
-inputSID = 3329
-csv_filepath=r'rank' + str(inputSID)+ 'short.csv'
+inputSID = 3336
+csv_filepath=r'rank' + str(inputSID)+ '.csv'
 
 
 #%% Magic Numbers

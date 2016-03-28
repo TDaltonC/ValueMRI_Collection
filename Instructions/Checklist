@@ -1,0 +1,80 @@
+
+    
+Prep Paperwork
+    Remove one paper-clipped packet from yellow manila envelope
+    Put the first two sheets on one clipboard 1
+    Put pen on clipboard 1
+    Put clipboard 1 on Calvin’s desk
+    Put the other sheets on a clipboard 2
+    Put pen on clipboard 2
+    Put clipboard 2 on the wide shelf for the subject
+    Move money from wallet to payment pocket
+
+Prep Rank Task
+    Open csv doc for inputting subject choices
+    SaveAs CSV as RANK[subject ID].csv
+    Lay out cards, sorted by number (1-10, 11-20, 21-30)
+    Place out individual sticky cards
+    Create deck for participant
+    Clear chairs from counter
+
+Prep Tablets
+    Check Primary tablet batteries is >50%
+    Launch Matlab on Primary tablet 
+    Check Secondary tablet batteries is >50%
+    Launch Matlab on Primary tablet 
+    Check scripts are loaded on chip 1
+    Check scripts are loaded on chip 2
+    Load chips in to card slots 1 & 2
+    Pack chip card into Dalton’s bag
+
+When The Subject Arrives 
+    Ask Subject
+    When was your last meal?
+    Do you have any food allergies or any food restrictions?
+    Do you meet all of the requirements for having an MRI scan as listed in the recruitment email?
+    Do you have any metal in your body or in your mouth (i.e. metal fillings, crowns, or permanent retainers)?
+    Hand subject paperwork to read
+
+After Subject Finished Ranking Task
+    Hand Subject to Niree
+    Flip cards and record number on back
+    Record card numbers on paper
+    Enter numbers in to csv
+    Add type codes (1 is single, 2 is scale, 3 is bundle)
+
+Explain task
+    Fixed 
+    Open is “on screen”
+
+    
+After Arriving at DNI
+
+After final Scan Immediately do these
+    Unpack participant
+
+    
+    
+Final Task
+
+Clean-up
+
+Data move Checklist
+    Duplicate blank subject fold to create folder for this subject
+    Put eye tracking data in eye tracking folder
+    Put DICOMs in scans folder
+    Put 5 mat files from scanner task in matLabOutput folder
+    Put 1 mat file form poast scanner task in matLabOutput folder
+    Put option subjects rank file csv from option selection folder in to dataframes folder
+
+    Preprocess Checklist
+    Manually Nifti convert using dcm2niigui
+    Check subject list in mat2csv4subjects
+    Run mat2csv4subjects
+    Check subject list in finishingTouchesOnMatlabData.py
+    Run finishingTouchesOnMatlabData.py
+    Check subject list in MLE.m
+    Run MLE.m
+    Sftp the data folder
+
+    
