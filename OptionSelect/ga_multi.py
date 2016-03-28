@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Aug 13 13:01:21 2015
-@author: Calvin
+@author: Calvin Leather
+
+This script uses the item rankings given by participants to determine a well balanaced set of decision options.
+It takes as input the excel file used to 
 """
 
 #%%==========imports and constants=================%%#
@@ -16,12 +19,14 @@ import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-#os.chdir('/Users/Calvin/Desktop/')
-
 # Define the location of the csv file with modeled preferences, should make relative
 # Three col CSV (Item-Code, Option-Type, Value)
-inputSID = 3336
-csv_filepath=r'rank' + str(inputSID)+ '.csv'
+try:
+    option_text = np.loadtxt('options_to_edit.txt')
+    inputSID = int(option_text)
+except:
+    raise ValueError('Something is wrong w options_to_edit.txt. Please edit this file with the correct SID and rerun')
+csv_filepath=r'rank' + str(inputSID)+ '.xls'
 
 
 #%% Magic Numbers
@@ -29,7 +34,8 @@ csv_filepath=r'rank' + str(inputSID)+ '.csv'
 #cxpb- probability of a cross over occuring in one chromosome of a mating pair
 #mutpb- probability of at each nucleotide of a mutation
 #number of individuals to put in HOF in each epoc
-nepochs, ngen, npop, cxpb, mutpb =2,125,2500, 0.1, 0.05
+nepochs, ngen, npop, cxpb, mutpb =2,50,250, 0.1, 0.05
+n_proc = 2
     
 HOFsize=1
 
@@ -40,6 +46,7 @@ n_hetero=15 #2 number of possibilities for the heterogenous bundle
 n_homo=22 #3 number of possibilities for the homogeneous scaling
 n_genome=n_single+n_hetero+n_homo #total number of possibilities for all cases
 n_target=10 #Desired number in each chromosome
+
 
 chromosomeDict={0:n_single, 1:n_hetero, 2:n_homo}
 
@@ -57,22 +64,22 @@ def evalFit(individual):
     UniformCost- Uses KS divergence to indicate distance of distribution of values from uniform distribution
     DistanceCost- Uses KS divergence to indicate differences between distributions
     Cost currently is a simple weightable summation, might be changed to F score"""
-    indiv=genoToPheno(individual)
-    #similarityCost=np.sum(np.in1d([singletonLookup[k] for k in individual[0][0]],[ bundleLookup[k] for k in individual[0][1] ]))
-    #similarity2=np.sum([np.sum(c)>1 for c in [np.in1d(p,[singletonLookup[k] for k in individual[0][0]]) for p in [ bundleLookup2[w] for w in individual[0][2] ]]])
-    rangeCost=20*(np.ptp(indiv[0])+np.ptp(indiv[1])+np.ptp(indiv[2]))/50   
-    #distanceCost=10*(ks_2samp(indiv[0], indiv[1])[1]+ks_2samp(indiv[1], indiv[2])[1]+ks_2samp(indiv[2], indiv[0])[1])
-    #uniformityCost = -np.power(np.diff(np.hstack((0,indiv[0],60))),2).sum()-np.power(np.diff(np.hstack((0,indiv[1],60))),2).sum()-np.power(np.diff(np.hstack((0,indiv[2],60))),2).sum()
+    #indiv=genoToPheno(individual)
+    indiv = individual[0]
+    indiv = [np.sort(indiv[0]), np.sort(indiv[1]), np.sort(indiv[2])] 
+    rangeCost=3*(np.ptp(indiv[0])+np.ptp(indiv[1])+np.ptp(indiv[2]))
+    diffCost = -2*np.var((np.mean(indiv[0]),np.mean(indiv[1]), np.mean(indiv[2])))
     spacingCost = 5*(np.mean(np.diff(np.hstack((0,indiv[0],60))))+np.mean(np.diff(np.hstack((0,indiv[1],60))))+np.mean(np.diff(np.hstack((0,indiv[2],60)))))
-    varCost = -3*(np.var(np.diff(np.hstack((0,indiv[0],60))))+np.var(np.diff(np.hstack((0,indiv[1],60))))+np.var(np.diff(np.hstack((0,indiv[2],60)))))
-    cost=rangeCost+spacingCost+varCost+rangeCost
+    varCost = -10*(np.power(np.var(np.diff(np.hstack((0,indiv[0],60)))),3)+np.power(np.var(np.diff(np.hstack((0,indiv[1],60)))),3)+np.power(np.var(np.diff(np.hstack((0,indiv[2],60)))),3))
+    adjCost = -15*(np.sum(np.diff(indiv[0])==1)+ np.sum(np.diff(indiv[1])==1)+ np.sum(np.diff(indiv[2])==1))
+    cost=rangeCost+spacingCost+varCost+rangeCost+diffCost+adjCost
     return (cost,)
 
 def getSims(individual):
     similarityCost=np.sum(np.in1d([singletonLookup[k] for k in individual[0][0]],[ bundleLookup[k] for k in individual[0][1] ]))
     similarity2=np.sum([np.sum(c)>1 for c in [np.in1d(p,[singletonLookup[k] for k in individual[0][0]]) for p in [ bundleLookup2[w] for w in individual[0][2] ]]])
-    print similarityCost
-    print similarity2
+    print(similarityCost)
+    print(similarity2)
     
 
 # Creates the initial generation      
@@ -131,11 +138,6 @@ def genoToPheno(individual):
             indiv[chro][i]=valueDictionary[chro+1][int(individual[0][chro][i])]
     return indiv
 
-#stores top n individuals of an epoch in a list    
-def custHallOfFame(population,maxaddsize):
-    for i in tools.selBest(population, k=maxaddsize): 
-        HallOfFame.append(i)
-
 #checks for human error in value entry
 def inputErrorCheck(raw_data):
     if not raw_data[['item1', 'item2']].applymap(np.isreal).all().all():
@@ -143,7 +145,7 @@ def inputErrorCheck(raw_data):
     if (raw_data.index>=60).any():
         raise ValueError("Custom error, ask CL : An item index is > 60")
     if raw_data.duplicated(subset=['item1', 'item2']).any():
-        print raw_data[raw_data.duplicated(subset=['item1', 'item2'])]
+        print(raw_data[raw_data.duplicated(subset=['item1', 'item2'])])
         raise ValueError('Custom error, ask CL : Some item value is duplicated')
     if raw_data[['item1', 'item2']].applymap(lambda x: x>30).any().any():
         raise ValueError('Item number is greater than 30')
@@ -155,7 +157,7 @@ def getRank(item):
         raise ValueError('Custom error: Some item is not a tuple in rank ordering')
 
 #%%==============import data from csv======================%%#
-raw_choice_dataset = pd.read_csv(csv_filepath, sep=',', header=0)
+raw_choice_dataset = pd.read_excel(csv_filepath, sep=',', header=0)
 
 inputErrorCheck(raw_choice_dataset)
 
@@ -191,7 +193,7 @@ stats.register("min", np.min)
 
 toolbox = base.Toolbox()
 
-toolbox.register("HOF", custHallOfFame, maxaddsize=HOFsize)
+toolbox.register("HOF", tools.HallOfFame, maxsize = 5)
 toolbox.register("create_individual", createIndividual)
 toolbox.register("individuals", tools.initRepeat, creator.Individual,
                  toolbox.create_individual, n=1) 
@@ -201,7 +203,7 @@ toolbox.register("evaluate", evalFit)
 
 toolbox.register("mate", nonReplicatingCross)
 toolbox.register("mutate", nonReplicatingMutate, indpb=.1)
-toolbox.register("select", tools.selTournament, tournsize=2)
+toolbox.register("select", tools.selTournament, tournsize=3)
 
 
 #toolbox.register('map', futures.map)
@@ -213,24 +215,25 @@ s.register("mean", np.mean)
 log=tools.Logbook()
 
 def main_program(pop):    
+    HOF = []
     fitnesses = toolbox.map(toolbox.evaluate, pop) # eval. fitness of pop
     for ind, fit in zip(pop, fitnesses):
         ind.fitness.values = fit
     
     for g in range(ngen):  
         if g%5==0:
-            print str(g) + ' of ' + str(ngen)       
+            print(str(g) + ' of ' + str(ngen))       
         offspring = toolbox.select(pop, len(pop)) #select which individuals to mate
-        offspring = map(toolbox.clone, offspring)
+        offspring = list(map(toolbox.clone, offspring))
         
         for child1, child2 in zip(offspring[::2], offspring[1::2]): #determine whether to have a cross over
             if random.random() < cxpb:
-                child1[0], child2[0] = toolbox.mate(child1[0], child2[0])
+                toolbox.mate(child1[0], child2[0])
                 del child1.fitness.values, child2.fitness.values
     
         for mutant in offspring: #determine whether to mutate
             if random.random() < mutpb:
-                mutant[0]=toolbox.mutate(mutant[0])
+                toolbox.mutate(mutant[0])
                 del mutant.fitness.values      
         
         invalids = [ind for ind in offspring if not ind.fitness.valid] #assign fitness scores to new offspring
@@ -238,28 +241,33 @@ def main_program(pop):
         for ind, fit in zip(invalids, fitnesses):
             ind.fitness.values = fit  
         
+        pop[:] = offspring #update population with offspring
         log.record(gen=g,**stats.compile(pop))
-        pop[:] = offspring #update population with offspring    
-    return tools.selBest(pop,k=1)[0][0]
+    return tools.selBest(pop,k=1)[0][0], log, HOF
 
 #%%======================main==============================%%#
 if __name__ == '__main__':  
-    print 'GA algorithm starting with the following settings:'
-    print 'nepochs = ' + str(nepochs) + ' ngen = ' + str(ngen) + ' npop = ' + str(npop)
-    print 'cxpb = ' + str(cxpb) + ' mutpb = ' + str(mutpb) + ' SID = ' + str(inputSID)
+    print('GA algorithm starting with the following settings:')
+    print('nepochs = ' + str(nepochs) + ' ngen = ' + str(ngen) + ' npop = ' + str(npop))
+    print('cxpb = ' + str(cxpb) + ' mutpb = ' + str(mutpb) + ' SID = ' + str(inputSID))
     answer = input('Are the following settings okay? (0/1)  ')
     if answer == 0:
         raise ValueError('Custom Error: Please change settings in script file')    
     
-    print 'initializing processing pool'
+    print('initializing processing pool')
     return_var= []
     processes = []
-    pool = mp.Pool(processes = 8)
-    pop_pool = [toolbox.population(n=npop) for x in range(8)]
+    pool = mp.Pool(processes = n_proc)
+    pop_pool = [toolbox.population(n=npop) for x in range(n_proc)]
     results = pool.map(main_program,pop_pool)
     pool.close()
-    print 'pool finished, outputing to JSON'    
+    print('pool finished, outputing to JSON')    
     
+    best_inds = [x[0] for x in results]
+    stats = [x[1] for x in results]
+    HOF_best = [x[2] for x in results]
+    #plt.plot([x['min'] for x in stats[0]])
+    results = best_inds
     results = [[np.sort(x[0]),np.sort(x[1]),np.sort(x[2])] for x in results]
     
     resultsFit = [evalFit([x]) for x in results]
@@ -287,16 +295,16 @@ if __name__ == '__main__':
     outputDataFull = [item[0] if item[1]==0 else item for item in outputDataFull]
     outputData = { 'options' : outputDataFull }
     outputData = json.dumps(outputData)
-    with open('jsonOutExtended.txt', 'w') as outfile:
+    with open('..\\BehavioralValueMeasurements\\jsonOutExtended.txt', 'w') as outfile:
         outfile.write(str(outputData))
     #outputDataFull=sorted(outputDataFull, key = getRank)
     #outputDataFull=sorted(outputDataFull) 
-    plt.hold(True)
-    plt.title(csv_filepath)
-    sns.set_context(rc={"figure.figsize": (8, 4)})
-    plt.bar(np.asarray(bestIndividual[0]),np.ones((1,len(bestIndividual[0])))[0], color = 'blue')
-    plt.bar(np.asarray(bestIndividual[1]),np.ones((1,len(bestIndividual[1])))[0], color = 'red')
-    plt.bar(np.asarray(bestIndividual[2]),np.ones((1,len(bestIndividual[2])))[0], color = 'green')
-    individual=[bestIndividual]
-    similarityCost=np.sum(np.in1d([singletonLookup[k] for k in individual[0][0]],[ bundleLookup[k] for k in individual[0][1] ]))
-    similarity2=np.sum([np.sum(c)>1 for c in [np.in1d(p,[singletonLookup[k] for k in individual[0][0]]) for p in [ bundleLookup2[w] for w in individual[0][2] ]]])
+    #plt.hold(True)
+    #plt.title(csv_filepath)
+    #sns.set_context(rc={"figure.figsize": (8, 4)})
+    #plt.bar(np.asarray(bestIndividual[0]),np.ones((1,len(bestIndividual[0])))[0], color = 'blue')
+    #plt.bar(np.asarray(bestIndividual[1]),np.ones((1,len(bestIndividual[1])))[0], color = 'red')
+    #plt.bar(np.asarray(bestIndividual[2]),np.ones((1,len(bestIndividual[2])))[0], color = 'green')
+    #individual=[bestIndividual]
+    #similarityCost=np.sum(np.in1d([singletonLookup[k] for k in individual[0][0]],[ bundleLookup[k] for k in individual[0][1] ]))
+    #similarity2=np.sum([np.sum(c)>1 for c in [np.in1d(p,[singletonLookup[k] for k in individual[0][0]]) for p in [ bundleLookup2[w] for w in individual[0][2] ]]])
